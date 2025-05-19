@@ -5,26 +5,81 @@ import Link from "next/link";
 import Image from "next/image";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../FirebaseConfig";
+import {
+  QueryClient,
+  QueryClientProvider,
+} from "react-query";
+import { FiSearch, FiFilter } from "react-icons/fi";
+
+const queryClient = new QueryClient();
 
 const categories = [
   "All",
-  "Frontend",
-  "Backend",
-  "Design",
-  "DevOps",
-  "Data Science",
-  "Mobile",
+  "Programming Language Support",
+  "Web Development Support",
+  "Mobile App Development Support",
+  "Database Support",
+  "DevOps & Infrastructure Support",
+  "Security Support",
+  "ERP & Enterprise Application Support",
+  "CRM & SaaS Support",
+  "Testing & QA Support",
+  "AI/ML & Data Science Support",
+  "API & Integration Support",
+  "Networking & System Support",
+  "Desktop & Software Support",
+  "Content Management Systems (CMS)",
+  "LMS (Learning Management Systems)",
+  "Digital Marketing & SEO Support",
+  "Data Analytics & Reporting Support",
+  "Version Control & Code Management",
+  "Client Training & Onboarding",
+  "Cloud Computing Support",
+  "Game Development Support",
+  "UI/UX Design Support",
+  "Blockchain Development Support",
+  "E-commerce Support",
+  "AR/VR Development Support",
+  "IT Support & Help Desk",
+  "Big Data Support",
+  "IoT (Internet of Things) Support",
+  "Automation & RPA Support",
+  "Embedded Systems Support",
+  "Robotics Support",
+  "Bioinformatics Support",
+  "Healthcare IT Support",
+  "Legal Tech Support",
+  "EdTech Support",
+  "Energy Tech Support",
+  "FinTech Support",
+  "Supply Chain & Logistics Support",
+  "Human Resource Tech Support",
+  "Real Estate Tech Support",
+  "Hospitality Tech Support",
+  "Retail Tech Support",
+  "Manufacturing Tech Support",
+  "Non-Profit Tech Support",
+  "Government Tech Support",
+  "Media & Entertainment Support",
+  "Travel & Tourism Tech Support",
 ];
-const levels = ["All", "Beginner", "Intermediate", "Advanced"];
 
-export default function TrainingPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedLevel, setSelectedLevel] = useState("All");
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TrainingPage />
+    </QueryClientProvider>
+  );
+}
+
+function TrainingPage() {
   const [trainings, setTrainings] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [navigatingTo, setNavigatingTo] = useState(null);
 
-  // Fetch trainings from Firestore
   useEffect(() => {
     const fetchTrainings = async () => {
       try {
@@ -45,79 +100,80 @@ export default function TrainingPage() {
   }, []);
 
   const filteredTrainings = trainings.filter((training) => {
-    const matchesSearch =
-      training.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      training.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = training.title
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const matchesCategory =
       selectedCategory === "All" || training.category === selectedCategory;
-    const matchesLevel =
-      selectedLevel === "All" || training.level === selectedLevel;
 
-    return matchesSearch && matchesCategory && matchesLevel;
+    return matchesSearch && matchesCategory;
   });
+
+  const ITEMS_PER_PAGE = 6;
+  const totalPages = Math.ceil(filteredTrainings.length / ITEMS_PER_PAGE);
+
+  const paginatedTrainings = filteredTrainings.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleCardClick = (id) => {
+    setNavigatingTo(id);
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading trainings...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <p>Loading trainings...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-extrabold text-white sm:text-5xl sm:tracking-tight lg:text-6xl">
-            Our Training Programs
+          <h1 className="text-4xl font-extrabold text-white sm:text-5xl drop-shadow">
+            Our <span className="text-blue-400">Trainings</span>
           </h1>
-          <p className="mt-5 max-w-xl mx-auto text-xl text-gray-300">
-            Enhance your skills with our industry-leading courses
+          <p className="text-xl text-gray-300 mt-4 max-w-2xl mx-auto">
+            Explore our industry-leading courses designed to boost your skills
           </p>
         </div>
 
-        {/* Search and Filter Section */}
-        <div className="bg-gray-800 p-6 rounded-xl shadow-md mb-12">
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative max-w-2xl mx-auto">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-5 w-5 text-gray-400"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
+        {/* Search and Filters */}
+        <div className="bg-gray-800 p-9  rounded-xl mb-10 shadow-2xl border border-blue-800/20">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-3">
+            {/* Search Bar with Icon */}
+            <div className="relative w-full md:w-1/2">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-400 pointer-events-none">
+                <FiSearch size={22} />
+              </span>
               <input
                 type="text"
-                className="block w-full pl-10 pr-3 py-3 border border-gray-700 rounded-full bg-gray-700 text-white placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full bg-gray-700 text-white p-3 pl-11 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 shadow-sm"
                 placeholder="Search trainings..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap justify-center gap-4">
-            {/* Category Filter */}
-            <div className="w-full sm:w-auto">
-              <label
-                htmlFor="category"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
-                Category
-              </label>
+            {/* Filter Section with Icon */}
+            <div className="flex gap-4 w-full md:w-auto items-center">
+              
               <select
-                id="category"
-                className="block w-full pl-3 pr-10 py-2 text-base border-gray-700 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                className="bg-gray-700 text-white p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -127,39 +183,12 @@ export default function TrainingPage() {
                   </option>
                 ))}
               </select>
-            </div>
-
-            {/* Level Filter */}
-            <div className="w-full sm:w-auto">
-              <label
-                htmlFor="level"
-                className="block text-sm font-medium text-gray-300 mb-1"
-              >
-                Difficulty Level
-              </label>
-              <select
-                id="level"
-                className="block w-full pl-3 pr-10 py-2 text-base border-gray-700 bg-gray-700 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                value={selectedLevel}
-                onChange={(e) => setSelectedLevel(e.target.value)}
-              >
-                {levels.map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Reset Filters Button */}
-            <div className="w-full sm:w-auto flex items-end">
               <button
                 onClick={() => {
                   setSearchTerm("");
                   setSelectedCategory("All");
-                  setSelectedLevel("All");
                 }}
-                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6 py-3 rounded-md transition-all duration-300 shadow-md hover:shadow-xl font-semibold"
               >
                 Reset Filters
               </button>
@@ -167,145 +196,111 @@ export default function TrainingPage() {
           </div>
         </div>
 
-        {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-lg text-gray-300">
-            Showing{" "}
-            <span className="font-bold text-white">
-              {filteredTrainings.length}
-            </span>{" "}
-            training program{filteredTrainings.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-
-        {/* Training Cards Grid */}
-        {filteredTrainings.length > 0 ? (
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {filteredTrainings.map((training) => (
-              <Link
+        {/* Training Cards */}
+        {paginatedTrainings.length ? (
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedTrainings.map((training) => (
+              <div
                 key={training.id}
-                href={{
-                  pathname: `/trainings/${training.id}`,
-                  query: { training: JSON.stringify(training) },
-                }}
+                className={`relative bg-gradient-to-br from-gray-800 via-gray-900 to-blue-950 rounded-2xl overflow-hidden border border-blue-800/30 shadow-xl hover:shadow-blue-700/40 transition-all duration-300 transform hover:-translate-y-3 hover:scale-105 group ${
+                  navigatingTo === training.id ? "opacity-70" : ""
+                }`}
               >
-                <div className="bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col border border-gray-700 hover:border-blue-500">
-                  {/* Course Image */}
-                  <div className="h-48 relative">
+                <Link
+                  href={{
+                    pathname: `/trainings/${training.id}`,
+                    query: { training: JSON.stringify(training) },
+                  }}
+                  onClick={() => handleCardClick(training.id)}
+                  className="block h-full"
+                >
+                  <div className="relative h-60 group">
                     {training.imageUrl ? (
                       <Image
                         src={training.imageUrl}
                         alt={training.title}
-                        fill
-                        className="object-cover"
-                        unoptimized // Needed for external images
+                        layout="fill"
+                        objectFit="cover"
+                        className="transition-all duration-300 group-hover:opacity-90 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="h-full bg-gradient-to-r from-blue-600 to-blue-800 flex items-center justify-center">
-                        <span className="text-white text-2xl font-bold">
-                          {training.category}
-                        </span>
+                      <div className="h-full bg-gradient-to-r from-blue-700 to-blue-600 flex items-center justify-center text-white text-lg font-medium">
+                        {training.category}
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  </div>
-
-                  {/* Course Content */}
-                  <div className="p-6 flex-grow flex flex-col">
-                    {/* Category and Level Tags */}
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-300 bg-blue-900 bg-opacity-50 rounded-full">
-                        {training.category}
-                      </span>
-                      <span className="inline-block px-3 py-1 text-xs font-semibold text-purple-300 bg-purple-900 bg-opacity-50 rounded-full">
-                        {training.level}
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                      <span className="text-white font-semibold drop-shadow">
+                        View Details →
                       </span>
                     </div>
-
-                    {/* Title */}
-                    <h3 className="text-xl font-bold text-white group-hover:text-blue-400 mb-2">
-                      {training.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-gray-400 mb-4 flex-grow">
+                    {navigatingTo === training.id && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors duration-200">
+                        {training.title}
+                      </h3>
+                      <span className="inline-block bg-blue-700/30 text-blue-200 text-xs px-3 py-1 rounded-full font-semibold shadow-sm border border-blue-400/20">
+                        {training.category.split(" ")[0]}
+                      </span>
+                    </div>
+                    <p className="text-gray-400 line-clamp-4">
                       {training.description}
                     </p>
-
-                    {/* Metadata */}
-                    <div className="mt-auto">
-                      <div className="flex items-center justify-between">
-                        {/* Instructor */}
-                        <div className="flex items-center">
-                          <svg
-                            className="h-5 w-5 text-gray-400 mr-1"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                          </svg>
-                          <span className="text-sm text-gray-300">
-                            {training.instructor}
-                          </span>
-                        </div>
-
-                        {/* Duration */}
-                        <div className="flex items-center">
-                          <svg
-                            className="h-5 w-5 text-gray-400 mr-1"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          <span className="text-sm text-gray-300">
-                            {training.duration}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-gray-800 rounded-xl shadow border border-gray-700">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <h3 className="mt-2 text-lg font-medium text-white">
+          <div className="text-center py-16">
+            <div className="text-gray-400 text-xl mb-4">
               No trainings found
-            </h3>
-            <p className="mt-1 text-gray-400">
-              Try adjusting your search or filter criteria.
-            </p>
-            <div className="mt-6">
-              <button
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedCategory("All");
-                  setSelectedLevel("All");
-                }}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Reset all filters
-              </button>
             </div>
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedCategory("All");
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md transition-colors"
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center mt-12">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className={`px-6 py-3 rounded-md transition-all ${
+                currentPage === 1
+                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-xl"
+              }`}
+            >
+              Previous
+            </button>
+            <span className="text-white font-semibold">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className={`px-6 py-3 rounded-md transition-all ${
+                currentPage === totalPages
+                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-xl"
+              }`}
+            >
+              Next
+            </button>
           </div>
         )}
       </div>
